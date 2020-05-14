@@ -56,8 +56,8 @@ public class Page2_X_CategoryBottom  extends BottomSheetDialogFragment {
         list = new ArrayList<>();
         list.add(new Category_item("자연", "12", "A01", ""));
         list.add(new Category_item("역사", "12", "A02", "A0201"));
-        list.add(new Category_item("휴양", "12", "A02", "A0201"));
-        list.add(new Category_item("체험", "14", "A02", "A0206"));
+        list.add(new Category_item("휴양", "12", "A02", "A0202"));
+        list.add(new Category_item("체험", "12", "A02", "A0203"));
         list.add(new Category_item("산업", "12", "A02", "A0204"));
         list.add(new Category_item("건축/조형", "12", "A02", "A0205"));
         list.add(new Category_item("문화", "14", "A02", "A0206"));
@@ -111,7 +111,7 @@ public class Page2_X_CategoryBottom  extends BottomSheetDialogFragment {
 
 
     //arraylist값을 구성하는 클래스
-    public class Category_item {
+    public static class Category_item {
         String name;
         String contentId;
         String cat1;

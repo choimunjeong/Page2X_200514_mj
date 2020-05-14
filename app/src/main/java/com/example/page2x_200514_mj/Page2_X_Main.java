@@ -90,6 +90,7 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
     ProgressBar progressBar;
     Button  gift;
     HorizontalScrollView scrollView;
+    ArrayList<Page2_X_CategoryBottom.Category_item> category_list = new ArrayList<>();
 
     //레이아웃 관련
     AppBarLayout appBarLayout;
@@ -210,36 +211,8 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
         //txt 값 읽기
         settingList();
 
-
         //전달된 역의 지역코드, 시군구코드 찾기
         compareStation();
-
-
-        //혜택 버튼을 누르면
-        gift.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                //혜택이 없을 경우
-                if(benefitURL.equals("혜택없음")){
-                    final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(Page2_X_Main.this);
-                    alertDialogBuilder .setMessage(st_name + "역은 혜택이 없습니다.")
-                            .setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                                public void onClick( DialogInterface dialog, int id) {
-                                    // 프로그램을 종료한다
-                                   dialog.cancel(); } });
-                    AlertDialog alertDialog = alertDialogBuilder.create();
-                    alertDialogBuilder.show();
-                }
-
-                //있을 경우, url로 연결해준다.
-                else {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(benefitURL));
-                    startActivity(intent);
-                }
-            }
-        });
-
 
 
         //맵뷰
@@ -314,8 +287,26 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
 
                                 page++;
 
-                                //관광 api 연결 부분
-                                settingAPI_Data();
+                                //카테고리에서 여러개가 선택됐을 경우
+                                if(category_list.size()>0){
+                                    for(int p=0; p <category_list.size(); p++){
+                                        contentTypeId = category_list.get(p).getContentId();
+                                        cat1 = category_list.get(p).getCat1();
+                                        cat2 = category_list.get(p).getCat2();
+
+                                        settingAPI_Data();
+                                        Log.i("길이", p +"-" + String.valueOf(name_1.length));
+                                        //중간에 로딩할 데이터가 없으면 리스트에서 지워준다.
+                                        if(name_1.length < 20){
+                                            category_list.remove(p);
+                                        }
+                                    }
+
+                                } else {
+                                    //관광 api 연결 부분
+                                    settingAPI_Data();
+                                }
+
 
                                 //메시지 갱신 위치
                                 adapter.notifyDataSetChanged();
@@ -327,6 +318,32 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
                             noData_Dialog();
                         }
                     }
+                }
+            }
+        });
+
+
+        //혜택 버튼을 누르면
+        gift.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //혜택이 없을 경우
+                if(benefitURL.equals("혜택없음")){
+                    final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(Page2_X_Main.this);
+                    alertDialogBuilder .setMessage(st_name + "역은 혜택이 없습니다.")
+                            .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                                public void onClick( DialogInterface dialog, int id) {
+                                    // 프로그램을 종료한다
+                                    dialog.cancel(); } });
+                    AlertDialog alertDialog = alertDialogBuilder.create();
+                    alertDialogBuilder.show();
+                }
+
+                //있을 경우, url로 연결해준다.
+                else {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(benefitURL));
+                    startActivity(intent);
                 }
             }
         });
@@ -344,14 +361,13 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
 
 
 
-
         //지도 확대 버튼 누르면
         mapExpand_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 RelativeLayout.LayoutParams params2 = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
 
+                //확대되지 않았으면(false)
                 if(!isExpand){
                     appBarLayout.getLayoutParams().height = height;
                     appBarLayout.requestLayout();
@@ -367,6 +383,7 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
                     arrow_btn.requestLayout();
                 }
 
+                //확대 됐으면(true)
                 else {
                     changeVisibility(false, height);
                     isExpand = false;
@@ -384,11 +401,8 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
                 }
             }
         });
-
-
-
-
    }
+
 
 
     //카테고리 바텀시트에서 선택된 것이 버튼화
@@ -406,6 +420,9 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
 
                 //api 리셋
                 items.clear();
+                category_list.clear();
+                mapView.removeAllPOIItems();
+                isLoadData = true;
                 settingAPI_Data();
                 adapter.notifyDataSetChanged();
                 break;
@@ -513,6 +530,8 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
             String RESULT = task.execute().get();
             Log.i("전달 받은 값", RESULT);
 
+            if(RESULT.length() != 0){
+
 
             //사진링크, 타이틀(관광명), 분야뭔지 분리
             name_1 = RESULT.split("\n");
@@ -530,7 +549,7 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
             for (int i = 0; i < length; i++) {
                 name_2 = name_1[i].split("  ");
 
-                //img_Url이 없는 경우도 있기 때문에, 길이=5=있음/ 길이=4=없음
+                //img_Url이 없는 경우도 있기 때문에, 길이=8=있음/ 길이=7=없음 / 길이=5=imag,x,y좌표없음
                 if (name_2.length == 8) {
                     cat1[i] = name_2[0];
                     cat2[i] = name_2[1];
@@ -540,7 +559,7 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
                     mapx[i] = name_2[5];
                     mapy[i] = name_2[6];
                     name[i] = name_2[7];
-                } else {
+                } else if (name_2.length == 7) {
                     cat1[i] = name_2[0];
                     cat2[i] = name_2[1];
                     contentid[i] = name_2[2];
@@ -549,6 +568,15 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
                     mapx[i] = name_2[4];
                     mapy[i] = name_2[5];
                     name[i] = name_2[6];
+                } else if (name_2.length == 5) {
+                    cat1[i] = name_2[0];
+                    cat2[i] = name_2[1];
+                    contentid[i] = name_2[2];
+                    contenttypeid[i] = name_2[3];
+                    img_Url[i] = null;
+                    mapx[i] = null;
+                    mapy[i] = null;
+                    name[i] = name_2[4];
                 }
             }
 
@@ -556,25 +584,28 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
             for (int i = 0; i < length; i++) {
                 item[i] = new Recycler_item(Url_front + img_Url[i], name[i], contentid[i], mapx[i], mapy[i] ,cat1[i], cat2[i], contenttypeid[i]);
 
-                //마커 많이 만들기
-                double X = Double.parseDouble(mapx[i]);
-                double Y = Double.parseDouble(mapy[i]);
-                marker.setTag(1);
-                marker.setItemName(name[i]);
-                marker.setMapPoint(MapPoint.mapPointWithGeoCoord(Y, X));
-                marker.setMarkerType(MapPOIItem.MarkerType.BluePin); // 기본으로 제공하는 BluePin 마커 모양.
-                marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin); // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
-                mapView.addPOIItem(marker);
+                if(mapx[i] != null){
+                    //마커 많이 만들기
+                    double X = Double.parseDouble(mapx[i]);
+                    double Y = Double.parseDouble(mapy[i]);
+                    marker.setTag(1);
+                    marker.setItemName(name[i]);
+                    marker.setMapPoint(MapPoint.mapPointWithGeoCoord(Y, X));
+                    marker.setMarkerType(MapPOIItem.MarkerType.BluePin); // 기본으로 제공하는 BluePin 마커 모양.
+                    marker.setSelectedMarkerType(MapPOIItem.MarkerType.RedPin); // 마커를 클릭했을때, 기본으로 제공하는 RedPin 마커 모양.
+                    mapView.addPOIItem(marker);
+                }
             }
             for (int i = 0; i < length; i++) {
                 items.add(item[i]);
             }
-
+            }
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         } catch (ExecutionException ex) {
             ex.printStackTrace();
         }
+
     }
 
 
@@ -629,12 +660,16 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
     @Override
     public void onData(ArrayList<Page2_X_CategoryBottom.Category_item> list) {
 
-        //카테고리 선택되면 기존 것들 싹 삭제해줌
+        //초기화
+        page = 1;
+        isLoadData = true;
         category_add.removeAllViews();
+        category_list.clear();
         appBarLayout.getLayoutParams().height = (int)(483*d);
         appBarLayout.requestLayout();
+        mapView.removeAllPOIItems();
 
-        //카테고리에서 타입 선택시 생기는 버튼을 동적 생성
+        //카테고리에서 타입 선택시 생기는 버튼을 동적 생성(나중에)
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int)(38*d) );
         params.rightMargin = (int)(12*d);
 
@@ -647,6 +682,7 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
         button.setText(name);
         button.setLayoutParams(params);
         button.setId(R.id.category_add_btn1);
+        button.setPadding(10,0,10,0);
         button.setOnClickListener(this);
         button.setBackgroundResource(R.drawable.box_round_category_add);
         category_add.addView(button);
@@ -673,6 +709,9 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
 
             //관광 api 연결 부분
             settingAPI_Data();
+
+            //선택된 타입을 담기 위함
+            category_list.add(new Page2_X_CategoryBottom.Category_item(list.get(p).getName(), contentTypeId, cat1, cat2) );
         }
         adapter.notifyDataSetChanged();
     }
