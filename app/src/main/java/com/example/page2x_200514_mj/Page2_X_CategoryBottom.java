@@ -25,6 +25,7 @@ public class Page2_X_CategoryBottom  extends BottomSheetDialogFragment {
     ArrayList<Category_item> list;
     Page2_X_CategoryBottom_Adapter adapter;
     Page2_X_Interface xInterface;
+    boolean Selected = false;
 
 
     public static Page2_X_CategoryBottom  getInstance(){
@@ -94,10 +95,15 @@ public class Page2_X_CategoryBottom  extends BottomSheetDialogFragment {
                 for(int i =0; i<isSelected.length; i++){
                     if(isSelected[i]){
                         sendData.add(list.get(i));
+                        Selected = true;
                     }
                 }
 
-                xInterface.onData(sendData);
+                //하나라도 선택된것이 있으면 값 전달
+                if(Selected){
+                    xInterface.onData(sendData);
+                }
+
                 dismiss();
             }
         });
