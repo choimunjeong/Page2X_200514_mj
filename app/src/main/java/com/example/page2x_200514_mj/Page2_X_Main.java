@@ -295,11 +295,6 @@ public class Page2_X_Main extends AppCompatActivity implements Page2_X_Interface
                                         cat2 = category_list.get(p).getCat2();
 
                                         settingAPI_Data();
-                                        Log.i("길이", p +"-" + String.valueOf(name_1.length));
-                                        //중간에 로딩할 데이터가 없으면 리스트에서 지워준다.
-                                        if(name_1.length < 20){
-                                            category_list.remove(p);
-                                        }
                                     }
 
                                 } else {
